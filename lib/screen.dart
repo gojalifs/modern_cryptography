@@ -35,7 +35,7 @@ class _ScreenState extends State<Screen> {
   }
 
   final formKey = GlobalKey<FormState>();
-  TextEditingController inputController = TextEditingController();
+  TextEditingController textController = TextEditingController();
   TextEditingController keyController = TextEditingController();
   TextEditingController additionalParam = TextEditingController();
 
@@ -78,7 +78,7 @@ class _ScreenState extends State<Screen> {
                     ),
                     child: TextFormField(
                       maxLines: null,
-                      controller: inputController,
+                      controller: textController,
                       inputFormatters: inputFormattin(),
                       validator: (value) {
                         if (value!.isEmpty) {
@@ -109,17 +109,19 @@ class _ScreenState extends State<Screen> {
                         }
                         return null;
                       },
-                      decoration: const InputDecoration(
-                          border: OutlineInputBorder(
+                      decoration: InputDecoration(
+                          border: const OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(5.0))),
-                          hintText: 'Key'),
+                          hintText: widget.title == 'RSA' ? 'p' : 'Key'),
                     ),
                   ),
                   widget.title == 'Electronic Code Book (ECB)' ||
                           widget.title == 'Cipher Block Chaining (CBC)' ||
                           widget.title == 'Cipher Feedback' ||
-                          widget.title == 'Output Feedback (OFB)'
+                          widget.title == 'Output Feedback (OFB)' ||
+                          widget.title == 'Counter Mode' ||
+                          widget.title == 'RSA'
                       ? Padding(
                           padding: EdgeInsets.only(
                             top: MediaQuery.of(context).size.height * 0.02,
@@ -136,11 +138,13 @@ class _ScreenState extends State<Screen> {
                               }
                               return null;
                             },
-                            decoration: const InputDecoration(
-                                border: OutlineInputBorder(
+                            decoration: InputDecoration(
+                                border: const OutlineInputBorder(
                                     borderRadius:
                                         BorderRadius.all(Radius.circular(5.0))),
-                                hintText: 'Block Length'),
+                                hintText: widget.title == 'RSA'
+                                    ? 'q'
+                                    : 'Block Length'),
                           ),
                         )
                       : const SizedBox(),
@@ -159,8 +163,7 @@ class _ScreenState extends State<Screen> {
                                   /// Stream Cipher Function
                                   if (widget.title == 'Stream Cipher') {
                                     setState(() {
-                                      result = logic.stream(
-                                          inputController.text,
+                                      result = logic.stream(textController.text,
                                           keyController.text);
                                     });
                                   } else if (widget.title ==
@@ -168,7 +171,7 @@ class _ScreenState extends State<Screen> {
                                     print('ecb');
                                     setState(() {
                                       result = logic.ecb(
-                                          inputController.text,
+                                          textController.text,
                                           keyController.text,
                                           int.parse(additionalParam.text),
                                           'ecb');
@@ -177,7 +180,7 @@ class _ScreenState extends State<Screen> {
                                       'Cipher Block Chaining (CBC)') {
                                     setState(() {
                                       result = logic.ecb(
-                                          inputController.text,
+                                          textController.text,
                                           keyController.text,
                                           int.parse(additionalParam.text),
                                           'cbc');
@@ -186,18 +189,33 @@ class _ScreenState extends State<Screen> {
                                       'Cipher Feedback') {
                                     setState(() {
                                       result = logic.cfb(
-                                          inputController.text,
+                                          textController.text,
                                           keyController.text,
                                           int.parse(additionalParam.text),
                                           'cfb');
                                     });
-                                  } else {
+                                  } else if (widget.title ==
+                                      'Output Feedback (OFB)') {
                                     setState(() {
                                       result = logic.cfb(
-                                          inputController.text,
+                                          textController.text,
                                           keyController.text,
                                           int.parse(additionalParam.text),
                                           'ofb');
+                                    });
+                                  } else if (widget.title == 'Counter Mode') {
+                                    setState(() {
+                                      result = logic.ctr(
+                                          textController.text,
+                                          keyController.text,
+                                          int.parse(additionalParam.text));
+                                    });
+                                  } else if (widget.title == 'RSA') {
+                                    setState(() {
+                                      result = logic.rsa(
+                                          textController.text,
+                                          int.parse(keyController.text),
+                                          int.parse(additionalParam.text));
                                     });
                                   }
                                 }

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:math';
+import 'package:optimus_prime/optimus_prime.dart';
 
 class Logic {
   /// Stream Cipher
@@ -71,7 +73,9 @@ class Logic {
       }
     } else {
       int a = 0, b;
+
       for (var i = 0, j = 0; i < hasil.length; i++) {
+        /// initialitation IV with first key
         if (i == 0) {
           a = (int.parse(hasil[i], radix: 2) ^ key[0]) ^ key[j];
           newHasil.add(a.toRadixString(2).padLeft(8, '0'));
@@ -144,4 +148,75 @@ class Logic {
     print(result);
     return result;
   }
+
+  /// Counter Mode CTR
+  String ctr(String text, String key, int blockLength) {
+    String result = '';
+    var nonce = key[0];
+    String blockEncrypt = ecb(text, key, blockLength, 'ecb');
+    List encryptBlock = [];
+
+    for (var i = 0; i < text.length; i++) {
+      /// XOR the nonce and counter
+      int xor = int.parse(nonce, radix: 16) ^ i;
+
+      /// encrypt the header and key, i use ecb encryption for this
+      String eb = ecb(xor.toRadixString(16), key, blockLength, 'ecb');
+
+      String cipher =
+          (int.parse(eb, radix: 16) ^ text.codeUnitAt(i)).toRadixString(16);
+
+      result += cipher;
+    }
+
+    return result;
+  }
+
+  String rsa(String text, int p, int q) {
+    String result = '';
+    int n = p * q;
+    int m = (p - 1) * (q - 1);
+    int e = 0;
+    int d = 0;
+    List cipher = [];
+
+    // if (a.coprimeWith(m) == false) {
+    //   while (a.coprimeWith(m) == false) {
+    //     var a = Random().nextInt(m);
+    //     e = a;
+    //   }
+    // } else {
+    //   e = a;
+    // }
+    /// find number that coprime with m
+    for (e = 1; e < m; e++) {
+      if (e.coprimeWith(m)) {
+        break;
+      }
+    }
+
+    /// find d number that e*d % m = 1
+    for (d = 1; d < m; d++) {
+      if ((e * d) % m == 1) {
+        break;
+      }
+    }
+    print('e $e d $d');
+    print('kunci publik = (e, n) yaitu ($e, $n)');
+    print('kunci privat = (d, n) yaitu ($d, $n)');
+
+    /// encryption program
+    for (var i = 0; i < text.length; i++) {
+      // C = m^e mod n
+      int z = pow(text.codeUnitAt(i), e) % n as int;
+      print(z);
+      result += z.toRadixString(16);
+    }
+
+    return result;
+  }
+
+  // String diffie-hellman(){}
+
+  // String elgamal(){}
 }
