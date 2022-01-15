@@ -117,7 +117,9 @@ class _ScreenState extends State<Screen> {
                     ),
                   ),
                   widget.title == 'Electronic Code Book (ECB)' ||
-                          widget.title == 'Cipher Block Chaining (CBC)'
+                          widget.title == 'Cipher Block Chaining (CBC)' ||
+                          widget.title == 'Cipher Feedback' ||
+                          widget.title == 'Output Feedback (OFB)'
                       ? Padding(
                           padding: EdgeInsets.only(
                             top: MediaQuery.of(context).size.height * 0.02,
@@ -180,8 +182,23 @@ class _ScreenState extends State<Screen> {
                                           int.parse(additionalParam.text),
                                           'cbc');
                                     });
+                                  } else if (widget.title ==
+                                      'Cipher Feedback') {
+                                    setState(() {
+                                      result = logic.cfb(
+                                          inputController.text,
+                                          keyController.text,
+                                          int.parse(additionalParam.text),
+                                          'cfb');
+                                    });
                                   } else {
-                                    print('null');
+                                    setState(() {
+                                      result = logic.cfb(
+                                          inputController.text,
+                                          keyController.text,
+                                          int.parse(additionalParam.text),
+                                          'ofb');
+                                    });
                                   }
                                 }
                               },

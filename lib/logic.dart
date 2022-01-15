@@ -35,18 +35,15 @@ class Logic {
         .map((x) => x.toRadixString(2).padLeft(8, '0'))
         .join('');
     List binstringlist = binstring.split('');
-    print('ab $binstringlist');
 
     List<String> newHasil = [];
     List hasil = [];
+    String result = '';
 
     if (type == 'cbc') {
       binstringlist.add(binstringlist.removeAt(0));
       binstring = binstringlist.join('');
     }
-
-    print('hasil $binstringlist');
-    String result = '';
 
     for (var i = 1; i < binstring.length; i++) {
       if (binstring.length % block != 0) {
@@ -57,7 +54,7 @@ class Logic {
     }
 
     /// make binary from string
-    print('new biner ${binstring}');
+
     for (var i = 0; i < binstring.length; i += block) {
       if (i == binstring.length) {
         break;
@@ -65,7 +62,6 @@ class Logic {
       hasil.add(binstring.substring(i, i + block));
     }
 
-    print('plain biner ${hasil}');
     if (type == 'ecb') {
       /// encrypt binary
       for (var i = 0, j = 0; i < hasil.length; i++) {
@@ -73,22 +69,26 @@ class Logic {
         newHasil.add(a.toRadixString(2).padLeft(8, '0'));
         j = (j + 1) % key.length;
       }
+    } else {
+      int a = 0, b;
+      for (var i = 0, j = 0; i < hasil.length; i++) {
+        if (i == 0) {
+          a = (int.parse(hasil[i], radix: 2) ^ key[0]) ^ key[j];
+          newHasil.add(a.toRadixString(2).padLeft(8, '0'));
+          j = (j + 1) % key.length;
 
-      for (var i = 0; i < newHasil.length; i++) {
-        // result += String.fromCharCode(newHasil[i]);
-        // newHasil[i].toRadixString(2).padLeft(8, '0');
+          continue;
+        }
+        b = (int.parse(hasil[i], radix: 2) ^ a) ^ key[j];
+        newHasil.add(b.toRadixString(2).padLeft(8, '0'));
+        j = (j + 1) % key.length;
       }
     }
-    print('new result ${newHasil.join('')}');
+
     List newResult = [];
     String anu = newHasil.join();
     newResult = anu.split('');
     newResult.add(newResult.removeAt(0));
-    print('anu ${int.parse(anu, radix: 2)}');
-    // newResult = result.codeUnits
-    //     .map((e) => e.toRadixString(2).padLeft(8, '0'))
-    //     .toList();
-    print('newR $newResult');
     List hasilnya = [];
     anu = newResult.join('');
     for (var i = 0; i < anu.length; i += block) {
@@ -98,10 +98,50 @@ class Logic {
       result += String.fromCharCode(int.parse(hasilnya[i], radix: 2));
     }
 
-    // String hasilEncrypt = hasilnya.m
-
-    print('newres ${hasilnya}');
-
     return result.codeUnits.map((e) => e.toRadixString(16)).join(' ');
+  }
+
+  /// CFB
+  String cfb(String text, String keys, int blockLength, String type) {
+    // Ci = Pi ^ MSBm(Ek(Xi))
+    String result = '';
+    String a = ecb(text, keys, blockLength, 'cbc');
+    List z = a.split(' ').map((e) => e.toString().padLeft(2, '0')).toList();
+    print(z);
+    List<int> queue = [];
+    for (var i = 0, j = 0; i < text.length; i++) {
+      print(z[j]);
+      print('object ${int.parse(z[j], radix: 16) ^ text.codeUnitAt(i)}');
+      if (i == 0) {
+        print('a');
+        var x = ecb(String.fromCharCode(int.parse(z[j], radix: 16)), keys,
+            blockLength, 'cbc');
+        queue.add(int.parse(x, radix: 16) ^ text.codeUnitAt(i));
+        continue;
+      }
+      print('queue for ${queue[j]} $i');
+      // queue.add(queue[j] ^ text.codeUnitAt(i));
+      if (type == 'cfb') {
+        queue.add(int.parse(
+                ecb(String.fromCharCode(queue[j]), keys, blockLength, 'cbc'),
+                radix: 16) ^
+            text.codeUnitAt(i));
+      } else {
+        queue.add(int.parse(
+                ecb(String.fromCharCode(int.parse(z[j], radix: 16)), keys,
+                    blockLength, 'cbc'),
+                radix: 16) ^
+            text.codeUnitAt(i));
+      }
+      j = (j + 1) % queue.length;
+    }
+    print('queue ${queue[0]}');
+    var b;
+
+    for (var i = 0; i < queue.length; i++) {
+      result += queue[i].toRadixString(16);
+    }
+    print(result);
+    return result;
   }
 }
