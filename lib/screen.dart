@@ -12,7 +12,7 @@ class Screen extends StatefulWidget {
 }
 
 class _ScreenState extends State<Screen> {
-  inputFormattin() {
+  textFormattin() {
     if (widget.title == 'CAESAR CIPHER' || widget.title == 'VIGENERE CIPHER') {
       return <TextInputFormatter>[
         FilteringTextInputFormatter.allow(RegExp("[a-zA-Z ]"))
@@ -38,6 +38,9 @@ class _ScreenState extends State<Screen> {
   TextEditingController textController = TextEditingController();
   TextEditingController keyController = TextEditingController();
   TextEditingController additionalParam = TextEditingController();
+  TextEditingController nController = TextEditingController();
+  TextEditingController gController = TextEditingController();
+  TextEditingController yController = TextEditingController();
 
   Logic logic = Logic();
   String result = '';
@@ -70,52 +73,44 @@ class _ScreenState extends State<Screen> {
               key: formKey,
               child: Column(
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).size.height * 0.02,
-                      left: MediaQuery.of(context).size.height * 0.02,
-                      right: MediaQuery.of(context).size.height * 0.02,
-                    ),
-                    child: TextFormField(
-                      maxLines: null,
-                      controller: textController,
-                      inputFormatters: inputFormattin(),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Required';
-                        }
-                        return null;
-                      },
-                      decoration: const InputDecoration(
-                          border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(5.0))),
-                          hintText: 'Text'),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).size.height * 0.02,
-                      left: MediaQuery.of(context).size.height * 0.02,
-                      right: MediaQuery.of(context).size.height * 0.02,
-                    ),
-                    child: TextFormField(
-                      maxLines: null,
+                  widget.title == 'Diffie-Hellman'
+                      ? const SizedBox()
+                      : Padding(
+                          padding: EdgeInsets.only(
+                            top: MediaQuery.of(context).size.height * 0.02,
+                            left: MediaQuery.of(context).size.height * 0.02,
+                            right: MediaQuery.of(context).size.height * 0.02,
+                          ),
+                          child: TextFormField(
+                            maxLines: null,
+                            controller: textController,
+                            inputFormatters: textFormattin(),
+                            validator: (value) {
+                              if (value!.isEmpty) {
+                                return 'Required';
+                              }
+                              return null;
+                            },
+                            decoration: const InputDecoration(
+                                border: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(5.0))),
+                                hintText: 'Text'),
+                          ),
+                        ),
+                  CustomInputField(
                       controller: keyController,
-                      inputFormatters: inputFormattin(),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Required';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                          border: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(5.0))),
-                          hintText: widget.title == 'RSA' ? 'p' : 'Key'),
-                    ),
-                  ),
+                      widget: widget,
+                      formatter: widget.title == 'Diffie-Hellman'
+                          ? <TextInputFormatter>[
+                              FilteringTextInputFormatter.allow(RegExp("[0-9]"))
+                            ]
+                          : null,
+                      label: widget.title == 'RSA'
+                          ? 'p'
+                          : widget.title == 'Diffie-Hellman'
+                              ? 'Key Length'
+                              : 'Key'),
                   widget.title == 'Electronic Code Book (ECB)' ||
                           widget.title == 'Cipher Block Chaining (CBC)' ||
                           widget.title == 'Cipher Feedback' ||
@@ -131,7 +126,7 @@ class _ScreenState extends State<Screen> {
                           child: TextFormField(
                             maxLines: null,
                             controller: additionalParam,
-                            inputFormatters: inputFormattin(),
+                            inputFormatters: textFormattin(),
                             validator: (value) {
                               if (value!.isEmpty) {
                                 return 'Required';
@@ -146,6 +141,19 @@ class _ScreenState extends State<Screen> {
                                     ? 'q'
                                     : 'Block Length'),
                           ),
+                        )
+                      : const SizedBox(),
+                  widget.title == 'RSA'
+                      ? Padding(
+                          padding: EdgeInsets.only(
+                            top: MediaQuery.of(context).size.height * 0.02,
+                            left: MediaQuery.of(context).size.height * 0.02,
+                            right: MediaQuery.of(context).size.height * 0.02,
+                          ),
+                          child: const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                  'This RSA Algorythm use same key both sender and receiver')),
                         )
                       : const SizedBox(),
                   Padding(
@@ -217,33 +225,50 @@ class _ScreenState extends State<Screen> {
                                           int.parse(keyController.text),
                                           int.parse(additionalParam.text));
                                     });
+                                  } else if (widget.title == 'Diffie-Hellman') {
+                                    logic.diffie().then((value) {
+                                      print('value $value');
+                                      setState(() {
+                                        result = value;
+                                      });
+
+                                      // logic.diffie(
+                                      // int.parse(gController.text),
+                                      // int.parse(nController.text)
+                                      // );
+                                    });
                                   }
                                 }
                               },
                               icon: const Icon(Icons.lock_outline),
-                              label: const Text('ENCRYPT'),
+                              label: Text(widget.title == 'Diffie-Hellman'
+                                  ? 'Generate Key'
+                                  : 'ENCRYPT'),
                               style: ElevatedButton.styleFrom(
                                   primary: Colors.green,
                                   textStyle: const TextStyle(
                                     color: Colors.white,
                                   )),
                             ),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                FocusManager.instance.primaryFocus!.unfocus();
-                                if (formKey.currentState!.validate()) {
-                                  /// todo encrypt
-                                  setState(() {});
-                                }
-                              },
-                              icon: const Icon(Icons.lock_open_rounded),
-                              label: const Text('DECRYPT'),
-                              style: ElevatedButton.styleFrom(
-                                  primary: Colors.red,
-                                  textStyle: const TextStyle(
-                                    color: Colors.white,
-                                  )),
-                            )
+                            widget.title == 'Diffie-Hellman'
+                                ? const SizedBox()
+                                : ElevatedButton.icon(
+                                    onPressed: () {
+                                      FocusManager.instance.primaryFocus!
+                                          .unfocus();
+                                      if (formKey.currentState!.validate()) {
+                                        /// todo encrypt
+                                        setState(() {});
+                                      }
+                                    },
+                                    icon: const Icon(Icons.lock_open_rounded),
+                                    label: const Text('DECRYPT'),
+                                    style: ElevatedButton.styleFrom(
+                                        primary: Colors.red,
+                                        textStyle: const TextStyle(
+                                          color: Colors.white,
+                                        )),
+                                  )
                           ],
                         ),
                       ],
@@ -283,6 +308,48 @@ class _ScreenState extends State<Screen> {
               ),
             )
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class CustomInputField extends StatelessWidget {
+  const CustomInputField({
+    Key? key,
+    required this.controller,
+    required this.widget,
+    required this.formatter,
+    required this.label,
+  }) : super(key: key);
+
+  final TextEditingController controller;
+  final Screen widget;
+  final List<TextInputFormatter>? formatter;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).size.height * 0.02,
+        left: MediaQuery.of(context).size.height * 0.02,
+        right: MediaQuery.of(context).size.height * 0.02,
+      ),
+      child: TextFormField(
+        maxLines: null,
+        controller: controller,
+        inputFormatters: formatter,
+        validator: (value) {
+          if (value!.isEmpty) {
+            return 'Required';
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(5.0))),
+          label: Text(label),
         ),
       ),
     );

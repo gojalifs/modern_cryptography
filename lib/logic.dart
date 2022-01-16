@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:optimus_prime/optimus_prime.dart';
+import 'package:cryptography/cryptography.dart';
 
 class Logic {
   /// Stream Cipher
@@ -216,7 +217,40 @@ class Logic {
     return result;
   }
 
-  // String diffie-hellman(){}
+  // String diffie(int g, int n) {
+  //   String result = '';
+  //   // int x = Random().nextInt(n) + 1;
+  //   int x = 124;
+  //   var y = Random().nextInt(n) + 1;
+  //   // int X = g^^x % n
+  //   int X = pow(g, x) % n as int;
+  //   // Y = g^^y mod n
+  //   int Y = pow(g, y).toInt() % n;
+  //   // K = Y^^x mod n
+  //   int key = pow(Y, x) % n as int;
+  //   print('g $g n $n x $x X $X y $y Y $Y key $key');
+  //   return key.toString();
+  // }
+
+  Future<String> diffie() async {
+    final algorithm = Cryptography.instance.x25519();
+
+    // Alice chooses her key pair
+    final aliceKeyPair = await algorithm.newKeyPair();
+
+    // Alice knows Bob's public key
+    final bobKeyPair = await algorithm.newKeyPair();
+    final bobPublicKey = await bobKeyPair.extractPublicKey();
+
+    // Alice calculates the shared secret.
+    final sharedSecret = await algorithm.sharedSecretKey(
+      keyPair: aliceKeyPair,
+      remotePublicKey: bobPublicKey,
+    );
+    final sharedSecretBytes = await aliceKeyPair.extractPrivateKeyBytes();
+    print('Shared secret: ${sharedSecretBytes}');
+    return sharedSecretBytes.join(' ');
+  }
 
   // String elgamal(){}
 }

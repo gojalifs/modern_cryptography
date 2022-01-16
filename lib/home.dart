@@ -11,7 +11,8 @@ final ciphers = [
   'RSA',
   'Diffie-Hellman',
   'ElGamal',
-  'Knapsack'
+  'Knapsack',
+  'MD5'
 ];
 
 class Home extends StatefulWidget {
