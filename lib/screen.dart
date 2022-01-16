@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'logic.dart';
@@ -35,12 +37,15 @@ class _ScreenState extends State<Screen> {
   }
 
   final formKey = GlobalKey<FormState>();
+  final columnKey = GlobalKey<FormState>();
   TextEditingController textController = TextEditingController();
   TextEditingController keyController = TextEditingController();
   TextEditingController additionalParam = TextEditingController();
   TextEditingController nController = TextEditingController();
   TextEditingController gController = TextEditingController();
+  TextEditingController xController = TextEditingController();
   TextEditingController yController = TextEditingController();
+  TextEditingController zController = TextEditingController();
 
   Logic logic = Logic();
   String result = '';
@@ -73,6 +78,92 @@ class _ScreenState extends State<Screen> {
               key: formKey,
               child: Column(
                 children: [
+                  widget.title == 'Diffie-Hellman' || widget.title == 'ElGamal'
+                      ? Column(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: MediaQuery.of(context).size.height * 0.02,
+                                left: MediaQuery.of(context).size.height * 0.02,
+                                right:
+                                    MediaQuery.of(context).size.height * 0.02,
+                              ),
+                              child: const Text(
+                                  'Ini adalah algoritma pertukaran kunci Diffie-Hellman.'
+                                  'Kunci yang dihasilkan bisa digunakan untuk melakukan'
+                                  ' enkripsi dengan algoritma lain.'),
+                            ),
+                            Row(
+                              children: [
+                                ///g number
+                                Flexible(
+                                  flex: 1,
+                                  child: CustomInputField(
+                                      controller: nController,
+                                      widget: widget,
+                                      formatter: textFormattin(),
+                                      label: 'bilangan prima n'),
+                                ),
+
+                                /// n number
+                                Flexible(
+                                  flex: 1,
+                                  child: CustomInputField(
+                                      controller: gController,
+                                      widget: widget,
+                                      formatter: textFormattin(),
+                                      label: 'g akar primitif dari n'),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                ///g number
+                                Flexible(
+                                  flex: 1,
+                                  child: CustomInputField(
+                                      controller: xController,
+                                      widget: widget,
+                                      formatter: textFormattin(),
+                                      label: 'kunci privat pengirim'),
+                                ),
+
+                                /// n number
+                                Flexible(
+                                  flex: 1,
+                                  child: CustomInputField(
+                                      controller: zController,
+                                      widget: widget,
+                                      formatter: textFormattin(),
+                                      label: 'kunci publik y penerima'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : const SizedBox(),
+                  widget.title == 'ElGamal'
+                      ? ElevatedButton.icon(
+                          onPressed: () {
+                            FocusManager.instance.primaryFocus!.unfocus();
+                            // if (columnKey.currentState!.validate()) {
+                            int a = pow(int.parse(gController.text),
+                                    int.parse(xController.text)) %
+                                int.parse(nController.text) as int;
+                            setState(() {
+                              zController.text = a.toString();
+                            });
+                            // }
+                          },
+                          icon: const Icon(Icons.search),
+                          label: const Text('Cari Kunci Publik y anda'),
+                          style: ElevatedButton.styleFrom(
+                              primary: Colors.amber,
+                              textStyle: const TextStyle(
+                                color: Colors.white,
+                              )),
+                        )
+                      : const SizedBox(),
                   widget.title == 'Diffie-Hellman'
                       ? const SizedBox()
                       : Padding(
@@ -98,19 +189,13 @@ class _ScreenState extends State<Screen> {
                                 hintText: 'Text'),
                           ),
                         ),
-                  CustomInputField(
-                      controller: keyController,
-                      widget: widget,
-                      formatter: widget.title == 'Diffie-Hellman'
-                          ? <TextInputFormatter>[
-                              FilteringTextInputFormatter.allow(RegExp("[0-9]"))
-                            ]
-                          : null,
-                      label: widget.title == 'RSA'
-                          ? 'p'
-                          : widget.title == 'Diffie-Hellman'
-                              ? 'Key Length'
-                              : 'Key'),
+                  widget.title == 'Diffie-Hellman' || widget.title == 'ElGamal'
+                      ? const SizedBox()
+                      : CustomInputField(
+                          controller: keyController,
+                          widget: widget,
+                          formatter: textFormattin(),
+                          label: widget.title == 'RSA' ? 'p' : 'Key'),
                   widget.title == 'Electronic Code Book (ECB)' ||
                           widget.title == 'Cipher Block Chaining (CBC)' ||
                           widget.title == 'Cipher Feedback' ||
@@ -226,49 +311,55 @@ class _ScreenState extends State<Screen> {
                                           int.parse(additionalParam.text));
                                     });
                                   } else if (widget.title == 'Diffie-Hellman') {
-                                    logic.diffie().then((value) {
-                                      print('value $value');
-                                      setState(() {
-                                        result = value;
-                                      });
-
-                                      // logic.diffie(
-                                      // int.parse(gController.text),
-                                      // int.parse(nController.text)
-                                      // );
+                                    setState(() {
+                                      result = logic.diffieElgamal(
+                                        textController.text,
+                                        'diffie',
+                                        int.parse(gController.text),
+                                        int.parse(nController.text),
+                                        int.parse(xController.text),
+                                        zController.text,
+                                        y: int.parse(yController.text),
+                                      );
+                                    });
+                                  } else if (widget.title == 'ElGamal') {
+                                    setState(() {
+                                      result = logic.diffieElgamal(
+                                        textController.text,
+                                        'elgamal',
+                                        int.parse(gController.text),
+                                        int.parse(nController.text),
+                                        int.parse(xController.text),
+                                        zController.text,
+                                      );
                                     });
                                   }
                                 }
                               },
                               icon: const Icon(Icons.lock_outline),
-                              label: Text(widget.title == 'Diffie-Hellman'
-                                  ? 'Generate Key'
-                                  : 'ENCRYPT'),
+                              label: const Text('ENCRYPT'),
                               style: ElevatedButton.styleFrom(
                                   primary: Colors.green,
                                   textStyle: const TextStyle(
                                     color: Colors.white,
                                   )),
                             ),
-                            widget.title == 'Diffie-Hellman'
-                                ? const SizedBox()
-                                : ElevatedButton.icon(
-                                    onPressed: () {
-                                      FocusManager.instance.primaryFocus!
-                                          .unfocus();
-                                      if (formKey.currentState!.validate()) {
-                                        /// todo encrypt
-                                        setState(() {});
-                                      }
-                                    },
-                                    icon: const Icon(Icons.lock_open_rounded),
-                                    label: const Text('DECRYPT'),
-                                    style: ElevatedButton.styleFrom(
-                                        primary: Colors.red,
-                                        textStyle: const TextStyle(
-                                          color: Colors.white,
-                                        )),
-                                  )
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                FocusManager.instance.primaryFocus!.unfocus();
+                                if (formKey.currentState!.validate()) {
+                                  /// todo encrypt
+                                  setState(() {});
+                                }
+                              },
+                              icon: const Icon(Icons.lock_open_rounded),
+                              label: const Text('DECRYPT'),
+                              style: ElevatedButton.styleFrom(
+                                  primary: Colors.red,
+                                  textStyle: const TextStyle(
+                                    color: Colors.white,
+                                  )),
+                            )
                           ],
                         ),
                       ],
@@ -277,10 +368,12 @@ class _ScreenState extends State<Screen> {
                   Padding(
                     padding: EdgeInsets.only(
                         top: MediaQuery.of(context).size.height * 0.05),
-                    child: const ListTile(
+                    child: ListTile(
                         title: Text(
-                      'OUTPUT (HEX)',
-                      style: TextStyle(fontSize: 30),
+                      widget.title == 'Diffie-Hellman'
+                          ? 'OUTPUT (INT)'
+                          : 'OUTPUT (HEX)',
+                      style: const TextStyle(fontSize: 30),
                       textAlign: TextAlign.center,
                     )),
                   ),
@@ -350,6 +443,9 @@ class CustomInputField extends StatelessWidget {
           border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(5.0))),
           label: Text(label),
+          suffixIcon: label == 'g akar primitif dari n'
+              ? IconButton(onPressed: () {}, icon: const Icon(Icons.search))
+              : null,
         ),
       ),
     );

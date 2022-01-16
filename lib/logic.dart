@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:optimus_prime/optimus_prime.dart';
-import 'package:cryptography/cryptography.dart';
 
 class Logic {
   /// Stream Cipher
@@ -217,40 +216,45 @@ class Logic {
     return result;
   }
 
-  // String diffie(int g, int n) {
-  //   String result = '';
-  //   // int x = Random().nextInt(n) + 1;
-  //   int x = 124;
-  //   var y = Random().nextInt(n) + 1;
-  //   // int X = g^^x % n
-  //   int X = pow(g, x) % n as int;
-  //   // Y = g^^y mod n
-  //   int Y = pow(g, y).toInt() % n;
-  //   // K = Y^^x mod n
-  //   int key = pow(Y, x) % n as int;
-  //   print('g $g n $n x $x X $X y $y Y $Y key $key');
-  //   return key.toString();
-  // }
+  String diffieElgamal(String text, String type, int g, int n, int x, String z,
+      {int? y = 0}) {
+    // int x = Random().nextInt(n) + 1;
+    print(z);
+    List publicKey = [];
+    publicKey.addAll([z, g, n]);
+    print(publicKey);
+    // int X = g^^x % n
+    int X = pow(g, x) % n as int;
 
-  Future<String> diffie() async {
-    final algorithm = Cryptography.instance.x25519();
+    // Y = g^^y mod n
+    int Y = pow(g, y!).toInt() % n;
+    // K = Y^^x mod n
+    int keyE = 0;
+    int keyD = 0;
+    int a = 0;
+    int b = 0;
+    Map<String, dynamic> resultElgamal = {};
+    String result = '';
+    if (type == 'diffie') {
+      keyE = pow(Y, x) % n as int;
+      // decrypt : K' = pow(X, y) % n
+      keyD = pow(X, y) % n as int;
+      print('b');
+      return keyE.toString();
+    } else {
+      print('a');
+      keyE = pow(g, x) % n as int;
+      a = pow(g, x) % n as int;
 
-    // Alice chooses her key pair
-    final aliceKeyPair = await algorithm.newKeyPair();
+      resultElgamal['a'] = a;
+      resultElgamal['b'] = b;
 
-    // Alice knows Bob's public key
-    final bobKeyPair = await algorithm.newKeyPair();
-    final bobPublicKey = await bobKeyPair.extractPublicKey();
+      for (var i = 0; i < text.length; i++) {
+        b = (pow(int.parse(z), x) * text.codeUnitAt(i)) % n as int;
+        result += '${a.toRadixString(16)}${b.toRadixString(16)}';
+      }
 
-    // Alice calculates the shared secret.
-    final sharedSecret = await algorithm.sharedSecretKey(
-      keyPair: aliceKeyPair,
-      remotePublicKey: bobPublicKey,
-    );
-    final sharedSecretBytes = await aliceKeyPair.extractPrivateKeyBytes();
-    print('Shared secret: ${sharedSecretBytes}');
-    return sharedSecretBytes.join(' ');
+      return result;
+    }
   }
-
-  // String elgamal(){}
 }
