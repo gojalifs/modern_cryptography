@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:optimus_prime/optimus_prime.dart';
 
 class Logic {
@@ -218,11 +220,9 @@ class Logic {
 
   String diffieElgamal(String text, String type, int g, int n, int x, String z,
       {int? y = 0}) {
-    // int x = Random().nextInt(n) + 1;
-    print(z);
     List publicKey = [];
     publicKey.addAll([z, g, n]);
-    print(publicKey);
+
     // int X = g^^x % n
     int X = pow(g, x) % n as int;
 
@@ -239,10 +239,9 @@ class Logic {
       keyE = pow(Y, x) % n as int;
       // decrypt : K' = pow(X, y) % n
       keyD = pow(X, y) % n as int;
-      print('b');
+
       return keyE.toString();
     } else {
-      print('a');
       keyE = pow(g, x) % n as int;
       a = pow(g, x) % n as int;
 
@@ -256,5 +255,42 @@ class Logic {
 
       return result;
     }
+  }
+
+  String knapsack(String text, String key, int blockLength) {
+    String result = '';
+
+    List<int> plainCodeUnits = text.codeUnits;
+    String plainBlocks = '';
+
+    for (var i = 0; i < plainCodeUnits.length; i++) {
+      plainBlocks += plainCodeUnits[i].toRadixString(2).padLeft(8, '0');
+    }
+
+    List blocks = [];
+    for (var i = 0; i < plainBlocks.length; i += blockLength) {
+      blocks.add(plainBlocks.substring(i, i + blockLength));
+    }
+
+    List<int> coba = [];
+
+    int cryptogram = 0;
+    for (var i = 0; i < blocks.length; i++) {
+      for (var j = 0; j < blockLength; j++) {
+        cryptogram += int.parse(blocks[i][j]) * int.parse(key[j]);
+      }
+      coba.add(cryptogram);
+      cryptogram = 0;
+    }
+
+    for (var i = 0; i < coba.length; i++) {
+      result += coba[i].toRadixString(16);
+    }
+
+    return result;
+  }
+
+  String mdHash(String text) {
+    return md5.convert(utf8.encode(text)).toString();
   }
 }

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'logic.dart';
 
 class Screen extends StatefulWidget {
@@ -40,7 +41,7 @@ class _ScreenState extends State<Screen> {
   final columnKey = GlobalKey<FormState>();
   TextEditingController textController = TextEditingController();
   TextEditingController keyController = TextEditingController();
-  TextEditingController additionalParam = TextEditingController();
+  TextEditingController additionalParamController = TextEditingController();
   TextEditingController nController = TextEditingController();
   TextEditingController gController = TextEditingController();
   TextEditingController xController = TextEditingController();
@@ -189,7 +190,9 @@ class _ScreenState extends State<Screen> {
                                 hintText: 'Text'),
                           ),
                         ),
-                  widget.title == 'Diffie-Hellman' || widget.title == 'ElGamal'
+                  widget.title == 'Diffie-Hellman' ||
+                          widget.title == 'ElGamal' ||
+                          widget.title == 'MD5'
                       ? const SizedBox()
                       : CustomInputField(
                           controller: keyController,
@@ -201,7 +204,8 @@ class _ScreenState extends State<Screen> {
                           widget.title == 'Cipher Feedback' ||
                           widget.title == 'Output Feedback (OFB)' ||
                           widget.title == 'Counter Mode' ||
-                          widget.title == 'RSA'
+                          widget.title == 'RSA' ||
+                          widget.title == 'Knapsack'
                       ? Padding(
                           padding: EdgeInsets.only(
                             top: MediaQuery.of(context).size.height * 0.02,
@@ -210,8 +214,13 @@ class _ScreenState extends State<Screen> {
                           ),
                           child: TextFormField(
                             maxLines: null,
-                            controller: additionalParam,
-                            inputFormatters: textFormattin(),
+                            controller: additionalParamController,
+                            inputFormatters: widget.title == 'Knapsack'
+                                ? <TextInputFormatter>[
+                                    FilteringTextInputFormatter.allow(
+                                        RegExp("[0-9]"))
+                                  ]
+                                : textFormattin(),
                             validator: (value) {
                               if (value!.isEmpty) {
                                 return 'Required';
@@ -266,7 +275,8 @@ class _ScreenState extends State<Screen> {
                                       result = logic.ecb(
                                           textController.text,
                                           keyController.text,
-                                          int.parse(additionalParam.text),
+                                          int.parse(
+                                              additionalParamController.text),
                                           'ecb');
                                     });
                                   } else if (widget.title ==
@@ -275,7 +285,8 @@ class _ScreenState extends State<Screen> {
                                       result = logic.ecb(
                                           textController.text,
                                           keyController.text,
-                                          int.parse(additionalParam.text),
+                                          int.parse(
+                                              additionalParamController.text),
                                           'cbc');
                                     });
                                   } else if (widget.title ==
@@ -284,7 +295,8 @@ class _ScreenState extends State<Screen> {
                                       result = logic.cfb(
                                           textController.text,
                                           keyController.text,
-                                          int.parse(additionalParam.text),
+                                          int.parse(
+                                              additionalParamController.text),
                                           'cfb');
                                     });
                                   } else if (widget.title ==
@@ -293,7 +305,8 @@ class _ScreenState extends State<Screen> {
                                       result = logic.cfb(
                                           textController.text,
                                           keyController.text,
-                                          int.parse(additionalParam.text),
+                                          int.parse(
+                                              additionalParamController.text),
                                           'ofb');
                                     });
                                   } else if (widget.title == 'Counter Mode') {
@@ -301,14 +314,16 @@ class _ScreenState extends State<Screen> {
                                       result = logic.ctr(
                                           textController.text,
                                           keyController.text,
-                                          int.parse(additionalParam.text));
+                                          int.parse(
+                                              additionalParamController.text));
                                     });
                                   } else if (widget.title == 'RSA') {
                                     setState(() {
                                       result = logic.rsa(
                                           textController.text,
                                           int.parse(keyController.text),
-                                          int.parse(additionalParam.text));
+                                          int.parse(
+                                              additionalParamController.text));
                                     });
                                   } else if (widget.title == 'Diffie-Hellman') {
                                     setState(() {
@@ -332,6 +347,27 @@ class _ScreenState extends State<Screen> {
                                         int.parse(xController.text),
                                         zController.text,
                                       );
+                                    });
+                                  } else if (widget.title == 'Knapsack') {
+                                    if (int.parse(
+                                            additionalParamController.text) ==
+                                        keyController.text.length) {
+                                      setState(() {
+                                        result = logic.knapsack(
+                                            textController.text,
+                                            keyController.text,
+                                            int.parse(additionalParamController
+                                                .text));
+                                      });
+                                    } else {
+                                      Fluttertoast.showToast(
+                                          msg:
+                                              'Key Length Must be Same with Block Length');
+                                    }
+                                  } else if (widget.title == 'MD5') {
+                                    setState(() {
+                                      result =
+                                          logic.mdHash(textController.text);
                                     });
                                   }
                                 }
